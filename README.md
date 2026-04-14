@@ -1,3 +1,4 @@
+HEAD
 # Inventory Management System (IMS Pro)
 
 ## Overview
@@ -21,8 +22,8 @@ The system provides a centralized dashboard where different user roles—such as
 
 ## Getting Started
 1. **Database**: Ensure MySQL is running and create a database named `inventory_db`.
-2. **Backend**: Run `.\gradlew.bat bootRun` (served on port 8081).
-3. **Frontend**: Access via `http://localhost:8081`.
+2. **Backend**: Run `.\gradlew.bat bootRun` (served on port 8086).
+3. **Frontend**: Access via `http://localhost:8086`.
 4. **Initial Login**: Use `admin` / `admin123`.
 
 ## Roles & Responsibilities
@@ -31,3 +32,5 @@ The system provides a centralized dashboard where different user roles—such as
 - **Managers**: Performance monitoring, reports, and analytics.
 - **Finance**: Payments, receipts, and financial balance management.
 - **Super Admin**: System-wide configuration and high-level overrides.
+# inventorymanagementsystem
+a14b7e0309c309da1e7282c9bd1cce351f602778
