@@ -4,13 +4,5 @@ services:
     runtime: docker
     plan: free
     envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: DATABASE_USERNAME
-        sync: false
-      - key: DATABASE_PASSWORD
-        sync: false
-      - key: JWT_SECRET
-        generateValue: true
       - key: LOG_LEVEL_APP
         value: INFO
