@@ -23,4 +23,11 @@ public class SalesController {
     public ResponseEntity<SalesOrder> createSalesOrder(@RequestBody SalesOrder order) {
         return ResponseEntity.ok(service.createSalesOrder(order));
     }
+
+    /** Admin endpoint to recalculate grandTotal for orders that were saved as 0 */
+    @PostMapping("/repair")
+    public ResponseEntity<String> repairZeroTotals() {
+        int count = service.repairZeroTotals();
+        return ResponseEntity.ok("Repaired " + count + " sales order(s) with zero grand total.");
+    }
 }

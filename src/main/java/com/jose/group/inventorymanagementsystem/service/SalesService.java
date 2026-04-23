@@ -26,7 +26,10 @@ public class SalesService {
 
     @Transactional
     public SalesOrder createSalesOrder(SalesOrder order) {
-        // Fetch and set real Customer
+        // Validate that items are present
+        if (order.getItems() == null || order.getItems().isEmpty()) {
+            throw new RuntimeException("Sales order must contain at least one item.");
+        }
         Customer customer = customerRepository.findById(order.getCustomer().getId())
                 .orElseThrow(() -> new RuntimeException("Customer not found"));
         order.setCustomer(customer);
@@ -75,5 +78,40 @@ public class SalesService {
 
     public List<SalesOrder> getAllSalesOrders() {
         return salesOrderRepository.findAll();
+    }
+
+    /**
+     * Repairs existing sales orders where grandTotal = 0 but items exist.
+     * Recalculates totals from the persisted sales_items rows.
+     */
+    @Transactional
+    public int repairZeroTotals() {
+        List<SalesOrder> orders = salesOrderRepository.findAll();
+        int repaired = 0;
+        for (SalesOrder order : orders) {
+            boolean hasZeroTotal = order.getGrandTotal() == null || order.getGrandTotal().compareTo(BigDecimal.ZERO) == 0;
+            if (hasZeroTotal && order.getItems() != null && !order.getItems().isEmpty()) {
+                BigDecimal total = BigDecimal.ZERO;
+                for (SalesItem item : order.getItems()) {
+                    boolean hasZeroPrice = item.getUnitPrice() == null || item.getUnitPrice().compareTo(BigDecimal.ZERO) == 0;
+                    if (hasZeroPrice && item.getProduct() != null) {
+                        item.setUnitPrice(item.getProduct().getSellingPrice());
+                    }
+                    if (item.getUnitPrice() != null && item.getQuantity() != null) {
+                        BigDecimal lineTotal = item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
+                        item.setTotalPrice(lineTotal);
+                        total = total.add(lineTotal);
+                    }
+                }
+                if (total.compareTo(BigDecimal.ZERO) > 0) {
+                    order.setTotalAmount(total);
+                    order.setTaxAmount(total.multiply(new BigDecimal("0.1")));
+                    order.setGrandTotal(order.getTotalAmount().add(order.getTaxAmount()));
+                    salesOrderRepository.save(order);
+                    repaired++;
+                }
+            }
+        }
+        return repaired;
     }
 }

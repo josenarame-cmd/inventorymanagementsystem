@@ -22,6 +22,16 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    @GetMapping("/me")
+    public ResponseEntity<UserDto> getCurrentUser(java.security.Principal principal) {
+        return ResponseEntity.ok(userService.getCurrentUser(principal.getName()));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<UserDto> updateProfile(java.security.Principal principal, @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(userService.updateProfile(principal.getName(), body));
+    }
+
     @PostMapping
     public ResponseEntity<UserDto> createUser(@RequestBody Map<String, String> body) {
         return ResponseEntity.ok(userService.createUser(body));
@@ -30,6 +40,11 @@ public class UserController {
     @PutMapping("/{id}/role")
     public ResponseEntity<UserDto> updateUserRole(@PathVariable Long id, @RequestParam User.Role role) {
         return ResponseEntity.ok(userService.updateUserRole(id, role));
+    }
+
+    @PatchMapping("/{id}/toggle-status")
+    public ResponseEntity<UserDto> toggleUserStatus(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.toggleUserStatus(id));
     }
 
     @DeleteMapping("/{id}")

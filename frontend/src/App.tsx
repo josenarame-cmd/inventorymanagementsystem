@@ -13,6 +13,8 @@ import Purchases from './pages/Purchases';
 import Sales from './pages/Sales';
 import AuditLogs from './pages/AuditLogs';
 import Users from './pages/Users';
+import Profile from './pages/Profile';
+import IntelligenceCenter from './pages/IntelligenceCenter';
 
 import { CurrencyProvider } from './context/CurrencyContext';
 
@@ -22,20 +24,26 @@ function App() {
             <AuthProvider>
                 <BrowserRouter>
                 <Routes>
-                    <Route path="/home" element={<LandingPage />} />
+                    {/* Landing Page as absolute root */}
+                    <Route path="/" element={<LandingPage />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-                    <Route path="/" element={<Layout />}>
-                        <Route index element={<Dashboard />} />
-                        <Route path="inventory" element={<Inventory />} />
-                        <Route path="suppliers" element={<Suppliers />} />
-                        <Route path="customers" element={<Customers />} />
-                        <Route path="purchases" element={<Purchases />} />
-                        <Route path="sales" element={<Sales />} />
-                        <Route path="audit-logs" element={<AuditLogs />} />
-                        <Route path="users" element={<Users />} />
+                    
+                    {/* Protected Dashboard Routes */}
+                    <Route element={<Layout />}>
+                        <Route path="/dashboard" element={<Dashboard />} />
+                        <Route path="/inventory" element={<Inventory />} />
+                        <Route path="/suppliers" element={<Suppliers />} />
+                        <Route path="/customers" element={<Customers />} />
+                        <Route path="/purchases" element={<Purchases />} />
+                        <Route path="/sales" element={<Sales />} />
+                        <Route path="/audit-logs" element={<AuditLogs />} />
+                        <Route path="/users" element={<Users />} />
+                        <Route path="/profile" element={<Profile />} />
+                        <Route path="/intelligence-center" element={<IntelligenceCenter />} />
                     </Route>
-                    <Route path="*" element={<Navigate to="/home" replace />} />
+                    
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
             </BrowserRouter>
         </AuthProvider>

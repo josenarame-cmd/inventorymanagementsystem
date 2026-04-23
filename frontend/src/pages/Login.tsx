@@ -17,7 +17,7 @@ const Login = () => {
         setIsSubmitting(true);
         try {
             await login({ username, password });
-            navigate('/');
+            navigate('/dashboard');
         } catch (err: any) {
             setError(err.response?.data?.message || 'Invalid username or password');
         } finally {

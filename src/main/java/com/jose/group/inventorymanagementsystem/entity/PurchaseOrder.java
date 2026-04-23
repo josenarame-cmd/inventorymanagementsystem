@@ -44,7 +44,12 @@ public class PurchaseOrder {
     private String status; // PENDING, RECEIVED, CANCELLED
 
     @OneToMany(mappedBy = "purchaseOrder", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     @JsonManagedReference
     private List<PurchaseItem> items = new ArrayList<>();
+
+    // Null-safe getter guards against Lombok @Builder.Default + @NoArgsConstructor bug
+    public List<PurchaseItem> getItems() {
+        if (items == null) items = new ArrayList<>();
+        return items;
+    }
 }

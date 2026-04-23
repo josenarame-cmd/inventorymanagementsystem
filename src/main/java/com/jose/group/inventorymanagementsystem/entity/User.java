@@ -25,6 +25,7 @@ public class User implements UserDetails {
     private String username;
 
     @Column(nullable = false)
+    @com.fasterxml.jackson.annotation.JsonIgnore
     private String password;
 
     @Column(unique = true, nullable = false)
@@ -36,6 +37,9 @@ public class User implements UserDetails {
     private Role role;
 
     private String profilePictureUrl;
+
+    @Builder.Default
+    private boolean enabled = true;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -59,10 +63,14 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 
     public enum Role {
-        SUPER_ADMIN, ADMIN, MANAGER, FINANCE, OPERATIONS, STAFF
+        SUPER_ADMIN,
+        ADMIN,
+        OPERATIONS_STAFF,
+        MANAGER_SUPERVISOR,
+        FINANCE_ACCOUNTANT
     }
 }

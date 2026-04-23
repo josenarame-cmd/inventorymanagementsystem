@@ -25,6 +25,26 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    public UserDto getCurrentUser(String username) {
+        return userRepository.findByUsername(username)
+                .map(this::mapToDto)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    @Transactional
+    public UserDto updateProfile(String username, Map<String, String> body) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (body.containsKey("fullName")) user.setFullName(body.get("fullName"));
+        if (body.containsKey("email")) user.setEmail(body.get("email"));
+        if (body.containsKey("password") && !body.get("password").isEmpty()) {
+            user.setPassword(passwordEncoder.encode(body.get("password")));
+        }
+        
+        return mapToDto(userRepository.save(user));
+    }
+
     @Transactional
     public UserDto createUser(Map<String, String> body) {
         String username = body.get("username");
@@ -41,7 +61,7 @@ public class UserService {
         try {
             role = User.Role.valueOf(roleName);
         } catch (Exception e) {
-            role = User.Role.STAFF;
+            role = User.Role.OPERATIONS_STAFF;
         }
 
         User user = User.builder()
@@ -64,6 +84,14 @@ public class UserService {
     }
 
     @Transactional
+    public UserDto toggleUserStatus(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setEnabled(!user.isEnabled());
+        return mapToDto(userRepository.save(user));
+    }
+
+    @Transactional
     public void deleteUser(Long userId) {
         if (!userRepository.existsById(userId)) {
              throw new RuntimeException("User not found");
@@ -79,6 +107,7 @@ public class UserService {
                 .fullName(user.getFullName())
                 .role(user.getRole())
                 .profilePictureUrl(user.getProfilePictureUrl())
+                .enabled(user.isEnabled())
                 .build();
     }
 }

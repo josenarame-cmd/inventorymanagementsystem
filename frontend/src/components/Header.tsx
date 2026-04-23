@@ -225,7 +225,10 @@ const Header = () => {
                                     </div>
                                 )}
                             </div>
-                            <button className="w-full py-4 bg-gray-50 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all">
+                            <button 
+                                onClick={() => { navigate('/intelligence-center'); setShowNotifications(false); }}
+                                className="w-full py-4 bg-gray-50 text-[10px] font-black text-blue-600 uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+                            >
                                 View Intelligence Center
                             </button>
                         </div>
@@ -239,6 +242,15 @@ const Header = () => {
                         <p className="text-sm font-black text-gray-900 leading-none capitalize">{user?.name || 'Administrator'}</p>
                         <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mt-1">{user?.role?.replace('_', ' ') || 'SYSTEM USER'}</p>
                     </div>
+                    
+                    <button 
+                        onClick={logout}
+                        className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-red-100 shadow-sm"
+                    >
+                        <LogOut size={16} />
+                        <span className="hidden md:inline">Sign Out</span>
+                    </button>
+
                     <div className="relative group">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white font-black shadow-lg shadow-blue-500/20 cursor-pointer group-hover:rotate-12 transition-transform">
                             {user?.name?.substring(0, 2).toUpperCase() || 'AD'}
@@ -249,7 +261,10 @@ const Header = () => {
                                 <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Account</p>
                                 <p className="text-xs font-bold text-gray-900 truncate">{user?.email}</p>
                             </div>
-                            <button className="w-full px-5 py-3 text-left text-sm font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-3 transition-colors">
+                            <button 
+                                onClick={() => navigate('/profile')}
+                                className="w-full px-5 py-3 text-left text-sm font-bold text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center gap-3 transition-colors"
+                            >
                                 <User size={18} /> Account Profile
                             </button>
                             <button 

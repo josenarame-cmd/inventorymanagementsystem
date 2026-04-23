@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Shield, Trash2, AlertTriangle, UserPlus, X, Lock, User, Mail, Eye, EyeOff, ChevronDown, Users as UsersIcon } from 'lucide-react';
+import { Shield, Trash2, AlertTriangle, UserPlus, X, Lock, User, Mail, Eye, EyeOff, ChevronDown, Users as UsersIcon, Activity, PenLine } from 'lucide-react';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
@@ -10,15 +10,15 @@ interface UserDto {
     fullName: string;
     role: string;
     profilePictureUrl: string | null;
+    enabled: boolean;
 }
 
 const ROLES = [
-    { value: 'STAFF',       label: 'Staff',       desc: 'Read-only access to basic features',         color: 'bg-gray-100 text-gray-600' },
-    { value: 'OPERATIONS',  label: 'Operations',  desc: 'Manage inventory, purchases & sales',         color: 'bg-blue-100 text-blue-700' },
-    { value: 'FINANCE',     label: 'Finance',     desc: 'View reports and financial data',             color: 'bg-purple-100 text-purple-700' },
-    { value: 'MANAGER',     label: 'Manager',     desc: 'Full operational access and oversight',       color: 'bg-emerald-100 text-emerald-700' },
-    { value: 'ADMIN',       label: 'Admin',       desc: 'Manage users and system configuration',       color: 'bg-orange-100 text-orange-700' },
-    { value: 'SUPER_ADMIN', label: 'Super Admin', desc: 'Unrestricted access to entire system',        color: 'bg-red-100 text-red-700' },
+    { value: 'SUPER_ADMIN',        label: 'Super Admin',        desc: 'Full system control: Users, Roles, Settings',         color: 'bg-red-100 text-red-700' },
+    { value: 'ADMIN',              label: 'Admin',              desc: 'Operational control: Inventory, Suppliers, Customers', color: 'bg-orange-100 text-orange-700' },
+    { value: 'OPERATIONS_STAFF',   label: 'Operations Staff',   desc: 'Daily work: Purchase orders, Sales, Records',         color: 'bg-blue-100 text-blue-700' },
+    { value: 'MANAGER_SUPERVISOR', label: 'Manager/Supervisor', desc: 'Monitoring: Reports, Approve transactions',          color: 'bg-emerald-100 text-emerald-700' },
+    { value: 'FINANCE_ACCOUNTANT', label: 'Finance/Accountant', desc: 'Money data: Payments, Receipts, Financial reports',    color: 'bg-purple-100 text-purple-700' },
 ];
 
 const roleBadge = (role: string) => {
@@ -27,7 +27,7 @@ const roleBadge = (role: string) => {
 };
 
 const AddUserModal = ({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) => {
-    const [formData, setFormData] = useState({ username: '', email: '', fullName: '', password: '', role: 'STAFF' });
+    const [formData, setFormData] = useState({ username: '', email: '', fullName: '', password: '', role: 'OPERATIONS_STAFF' });
     const [showPass, setShowPass] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -167,6 +167,82 @@ const AddUserModal = ({ onClose, onCreated }: { onClose: () => void; onCreated: 
     );
 };
 
+const EditUserModal = ({ user, onClose, onUpdated }: { user: UserDto; onClose: () => void; onUpdated: () => void }) => {
+    const [formData, setFormData] = useState({ fullName: user.fullName, email: user.email, role: user.role });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await api.put(`/users/${user.id}/role?role=${formData.role}`);
+            onUpdated();
+            onClose();
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Failed to update user.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden animate-fade-in border border-amber-100">
+                <div className="px-8 py-6 border-b border-gray-100 flex items-center justify-between bg-gradient-to-r from-amber-50 to-orange-50">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-amber-500 rounded-xl shadow-lg shadow-amber-500/20">
+                            <PenLine size={20} className="text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black text-gray-900 tracking-tight">Modify Identity</h3>
+                            <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Adjusting: {user.username}</p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-white rounded-xl transition-colors text-gray-400 hover:text-gray-700">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="px-8 py-8 space-y-6">
+                    {error && <div className="bg-red-50 p-4 rounded-2xl text-red-700 text-xs font-bold border border-red-100">{error}</div>}
+                    
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Profile Name</label>
+                        <div className="relative group">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors" size={18} />
+                            <input type="text" className="w-full bg-gray-50 border-2 border-transparent focus:border-amber-500 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-gray-900 outline-none transition-all"
+                                value={formData.fullName} readOnly />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Assigned Role</label>
+                        <div className="relative group">
+                            <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-amber-500 transition-colors" size={18} />
+                            <select 
+                                className="w-full bg-gray-50 border-2 border-transparent focus:border-amber-500 rounded-2xl py-4 pl-12 pr-4 text-sm font-bold text-gray-900 outline-none transition-all cursor-pointer appearance-none"
+                                value={formData.role} 
+                                onChange={(e) => setFormData({...formData, role: e.target.value as any})}
+                            >
+                                {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 pt-4">
+                        <button type="button" onClick={onClose} className="flex-1 py-4 bg-gray-100 text-gray-600 rounded-2xl font-black uppercase tracking-widest hover:bg-gray-200 transition-all text-xs">Dismiss</button>
+                        <button type="submit" disabled={loading} className="flex-1 py-4 bg-amber-500 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-amber-600 transition-all text-xs shadow-xl shadow-amber-500/30">
+                            {loading ? 'Processing...' : 'Apply Changes'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
 const Users = () => {
     const [users, setUsers] = useState<UserDto[]>([]);
     const [loading, setLoading] = useState(true);
@@ -174,6 +250,8 @@ const Users = () => {
     const [error, setError] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [deletingId, setDeletingId] = useState<number | null>(null);
+    const [viewingUser, setViewingUser] = useState<UserDto | null>(null);
+    const [editingUser, setEditingUser] = useState<UserDto | null>(null);
 
     const fetchUsers = async () => {
         try {
@@ -194,6 +272,15 @@ const Users = () => {
             setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to update role');
+        }
+    };
+
+    const handleToggleStatus = async (userId: number) => {
+        try {
+            const response = await api.patch(`/users/${userId}/toggle-status`);
+            setUsers(prev => prev.map(u => u.id === userId ? { ...u, enabled: response.data.enabled } : u));
+        } catch (err: any) {
+            alert('Failed to toggle user status');
         }
     };
 
@@ -244,16 +331,17 @@ const Users = () => {
             </div>
 
             {/* Stats strip */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 {[
                     { label: 'Total Users', value: users.length, color: 'from-blue-500 to-blue-600' },
-                    { label: 'Admins', value: users.filter(u => u.role === 'ADMIN' || u.role === 'SUPER_ADMIN').length, color: 'from-red-500 to-rose-600' },
-                    { label: 'Managers', value: users.filter(u => u.role === 'MANAGER').length, color: 'from-emerald-500 to-green-600' },
-                    { label: 'Staff', value: users.filter(u => u.role === 'STAFF').length, color: 'from-gray-500 to-gray-600' },
+                    { label: 'Admins',      value: users.filter(u => u.role === 'SUPER_ADMIN' || u.role === 'ADMIN').length, color: 'from-red-500 to-rose-600' },
+                    { label: 'Managers',    value: users.filter(u => u.role === 'MANAGER_SUPERVISOR').length, color: 'from-emerald-500 to-teal-600' },
+                    { label: 'Staff',       value: users.filter(u => u.role === 'OPERATIONS_STAFF').length, color: 'from-blue-400 to-indigo-500' },
+                    { label: 'Finance',     value: users.filter(u => u.role === 'FINANCE_ACCOUNTANT').length, color: 'from-purple-500 to-purple-600' },
                 ].map(stat => (
-                    <div key={stat.label} className={`bg-gradient-to-br ${stat.color} rounded-2xl p-5 text-white shadow-sm`}>
-                        <p className="text-3xl font-bold">{stat.value}</p>
-                        <p className="text-sm font-medium text-white/80 mt-1">{stat.label}</p>
+                    <div key={stat.label} className={`bg-gradient-to-br ${stat.color} rounded-2xl p-4 text-white shadow-sm`}>
+                        <p className="text-2xl font-bold">{stat.value}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/80 mt-1">{stat.label}</p>
                     </div>
                 ))}
             </div>
@@ -270,6 +358,7 @@ const Users = () => {
                             <tr className="bg-gray-50/70 border-b border-gray-100">
                                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Account</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Email</th>
+                                <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Status</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider">Role</th>
                                 <th className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-wider text-right">Actions</th>
                             </tr>
@@ -302,9 +391,17 @@ const Users = () => {
                                         {/* Email */}
                                         <td className="px-6 py-4 text-sm text-gray-600">{u.email || '—'}</td>
 
+                                        {/* Status */}
+                                        <td className="px-6 py-4 text-center">
+                                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${u.enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full ${u.enabled ? 'bg-emerald-500 animate-pulse' : 'bg-gray-400'}`} />
+                                                {u.enabled ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+
                                         {/* Role */}
                                         <td className="px-6 py-4">
-                                            {isCurrentUser ? (
+                                            {isCurrentUser || (currentUser?.role !== 'SUPER_ADMIN' && currentUser?.role !== 'ADMIN') ? (
                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold ${roleBadge(u.role)}`}>
                                                     <Shield size={11} /> {ROLES.find(r => r.value === u.role)?.label || u.role}
                                                 </span>
@@ -323,15 +420,44 @@ const Users = () => {
 
                                         {/* Actions */}
                                         <td className="px-6 py-4 text-right">
-                                            {!isCurrentUser && (
-                                                <button
-                                                    onClick={() => handleDelete(u.id)}
-                                                    disabled={deletingId === u.id}
-                                                    className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-xl transition-all disabled:opacity-50"
-                                                    title="Delete user"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
+                                            {(currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN') && (
+                                                <div className="flex items-center justify-end gap-2">
+                                                    <button
+                                                        onClick={() => setViewingUser(u)}
+                                                        className="p-2 rounded-xl text-blue-500 bg-blue-50 hover:bg-blue-100 transition-all"
+                                                        title="View information"
+                                                    >
+                                                        <Eye size={16} />
+                                                    </button>
+                                                    {(currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ADMIN') && (
+                                                        <button
+                                                            onClick={() => setEditingUser(u)}
+                                                            className="p-2 rounded-xl text-amber-500 bg-amber-50 hover:bg-amber-100 transition-all"
+                                                            title="Update user"
+                                                        >
+                                                            <PenLine size={16} />
+                                                        </button>
+                                                    )}
+                                                    {!isCurrentUser && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleToggleStatus(u.id)}
+                                                                className={`p-2 rounded-xl transition-all ${u.enabled ? 'text-amber-500 bg-amber-50 hover:bg-amber-100' : 'text-emerald-500 bg-emerald-50 hover:bg-emerald-100'}`}
+                                                                title={u.enabled ? 'Deactivate user' : 'Activate user'}
+                                                            >
+                                                                <Shield size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleDelete(u.id)}
+                                                                disabled={deletingId === u.id}
+                                                                className="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-xl transition-all disabled:opacity-50"
+                                                                title="Delete user"
+                                                            >
+                                                                <Trash2 size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             )}
                                         </td>
                                     </tr>
@@ -366,6 +492,56 @@ const Users = () => {
                 <AddUserModal
                     onClose={() => setShowAddModal(false)}
                     onCreated={fetchUsers}
+                />
+            )}
+
+            {viewingUser && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-md shadow-2xl overflow-hidden animate-fade-in p-8">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-black mb-4 shadow-xl shadow-blue-600/20">
+                                {viewingUser.fullName.charAt(0).toUpperCase()}
+                            </div>
+                            <h3 className="text-2xl font-black text-gray-900">{viewingUser.fullName}</h3>
+                            <p className="text-gray-500 font-medium">@{viewingUser.username}</p>
+                            
+                            <div className={`mt-4 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest ${roleBadge(viewingUser.role)}`}>
+                                {ROLES.find(r => r.value === viewingUser.role)?.label}
+                            </div>
+
+                            <div className="w-full mt-8 space-y-4">
+                                <div className="bg-gray-50 p-4 rounded-2xl flex items-center gap-4">
+                                    <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><Mail size={16}/></div>
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Email Address</p>
+                                        <p className="text-sm font-bold text-gray-900">{viewingUser.email}</p>
+                                    </div>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-2xl flex items-center gap-4">
+                                    <div className="p-2 bg-white rounded-lg text-emerald-600 shadow-sm"><Activity size={16}/></div>
+                                    <div className="text-left">
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Account Status</p>
+                                        <p className="text-sm font-bold text-gray-900">{viewingUser.enabled ? 'Active / Online' : 'Deactivated / Offline'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button 
+                                onClick={() => setViewingUser(null)}
+                                className="w-full mt-8 py-4 bg-gray-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg"
+                            >
+                                Close Profile
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {editingUser && (
+                <EditUserModal
+                    user={editingUser}
+                    onClose={() => setEditingUser(null)}
+                    onUpdated={fetchUsers}
                 />
             )}
         </div>

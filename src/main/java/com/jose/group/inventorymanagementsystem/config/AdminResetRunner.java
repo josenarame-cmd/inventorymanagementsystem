@@ -35,7 +35,7 @@ public class AdminResetRunner implements CommandLineRunner {
                     user.setEmail(targetEmail);
                     user.setPassword(passwordEncoder.encode(targetPassword));
                     user.setFullName("Vizion Bot Administrator");
-                    user.setRole(User.Role.ADMIN);
+                    user.setRole(User.Role.SUPER_ADMIN);
                     userRepository.save(user);
                     log.info("========== ADMIN ACCOUNT READY: {} / {} ==========", targetUsername, targetPassword);
                 },
@@ -45,7 +45,7 @@ public class AdminResetRunner implements CommandLineRunner {
                             .password(passwordEncoder.encode(targetPassword))
                             .email(targetEmail)
                             .fullName("Vizion Bot Administrator")
-                            .role(User.Role.ADMIN)
+                            .role(User.Role.SUPER_ADMIN)
                             .build();
                     userRepository.save(admin);
                     log.info("========== ADMIN ACCOUNT CREATED: {} / {} ==========", targetUsername, targetPassword);

@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Table(name = "sales_orders")
@@ -44,7 +45,12 @@ public class SalesOrder {
     private String status; // PENDING, COMPLETED, CANCELLED
 
     @OneToMany(mappedBy = "salesOrder", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
     @JsonManagedReference
     private List<SalesItem> items = new ArrayList<>();
+
+    // Null-safe getter guards against Lombok @Builder.Default + @NoArgsConstructor bug
+    public List<SalesItem> getItems() {
+        if (items == null) items = new ArrayList<>();
+        return items;
+    }
 }

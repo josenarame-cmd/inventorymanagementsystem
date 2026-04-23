@@ -17,4 +17,5 @@ public class UserDto {
     private String fullName;
     private User.Role role;
     private String profilePictureUrl;
+    private boolean enabled;
 }

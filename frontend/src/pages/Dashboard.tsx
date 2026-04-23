@@ -104,33 +104,58 @@ const Dashboard = () => {
                 ))}
             </div>
 
-            {isAdmin && (
+            {user?.role === 'SUPER_ADMIN' && (
                 <div className="bg-gradient-to-r from-gray-900 to-gray-800 p-8 rounded-3xl shadow-lg border border-gray-700 text-white mb-8">
                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                         <Shield className="text-emerald-400" size={24} /> 
-                        Admin Control Panel
+                        Super Admin System Control
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <Link to="/users" className="bg-gray-800 hover:bg-gray-700 p-4 rounded-2xl flex items-center justify-between border border-gray-700 transition-colors group">
                             <div className="flex items-center gap-3">
                                 <Users className="text-blue-400" size={20} />
-                                <span className="font-medium">Manage System Users</span>
+                                <span className="font-medium">User & Access Management</span>
                             </div>
                             <ArrowUpRight className="text-gray-500 group-hover:text-blue-400 transition-colors" size={18} />
                         </Link>
                         <Link to="/audit-logs" className="bg-gray-800 hover:bg-gray-700 p-4 rounded-2xl flex items-center justify-between border border-gray-700 transition-colors group">
                             <div className="flex items-center gap-3">
-                                <LayoutDashboard className="text-purple-400" size={20} />
-                                <span className="font-medium">View Global Audit Logs</span>
+                                <Shield className="text-purple-400" size={20} />
+                                <span className="font-medium">System Audit Logs</span>
                             </div>
                             <ArrowUpRight className="text-gray-500 group-hover:text-purple-400 transition-colors" size={18} />
                         </Link>
-                        <Link to="/inventory" className="bg-gray-800 hover:bg-gray-700 p-4 rounded-2xl flex items-center justify-between border border-gray-700 transition-colors group">
+                    </div>
+                </div>
+            )}
+
+            {user?.role === 'ADMIN' && (
+                <div className="bg-gradient-to-r from-blue-900 to-indigo-900 p-8 rounded-3xl shadow-lg border border-blue-700 text-white mb-8">
+                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <Package className="text-blue-400" size={24} /> 
+                        Operational Control Panel
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <Link to="/inventory" className="bg-white/10 hover:bg-white/20 p-4 rounded-2xl flex items-center justify-between border border-white/10 transition-colors group text-white">
                             <div className="flex items-center gap-3">
-                                <Package className="text-emerald-400" size={20} />
-                                <span className="font-medium">Master Inventory Settings</span>
+                                <Package className="text-blue-300" size={20} />
+                                <span className="font-medium">Inventory Mastery</span>
                             </div>
-                            <ArrowUpRight className="text-gray-500 group-hover:text-emerald-400 transition-colors" size={18} />
+                            <ArrowUpRight className="text-white/40 group-hover:text-white transition-colors" size={18} />
+                        </Link>
+                        <Link to="/suppliers" className="bg-white/10 hover:bg-white/20 p-4 rounded-2xl flex items-center justify-between border border-white/10 transition-colors group text-white">
+                            <div className="flex items-center gap-3">
+                                <Truck className="text-blue-300" size={20} />
+                                <span className="font-medium">Supplier Network</span>
+                            </div>
+                            <ArrowUpRight className="text-white/40 group-hover:text-white transition-colors" size={18} />
+                        </Link>
+                        <Link to="/customers" className="bg-white/10 hover:bg-white/20 p-4 rounded-2xl flex items-center justify-between border border-white/10 transition-colors group text-white">
+                            <div className="flex items-center gap-3">
+                                <Users className="text-blue-300" size={20} />
+                                <span className="font-medium">Customer Database</span>
+                            </div>
+                            <ArrowUpRight className="text-white/40 group-hover:text-white transition-colors" size={18} />
                         </Link>
                     </div>
                 </div>

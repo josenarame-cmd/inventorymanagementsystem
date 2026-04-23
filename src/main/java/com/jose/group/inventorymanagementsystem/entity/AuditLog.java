@@ -29,6 +29,9 @@ public class AuditLog {
     @Column(length = 2000)
     private String details;
 
+    @Column(nullable = false, length = 45) // IPv6 can be up to 45 chars
+    private String ipAddress;
+
     @Column(nullable = false)
     private LocalDateTime timestamp;
 }

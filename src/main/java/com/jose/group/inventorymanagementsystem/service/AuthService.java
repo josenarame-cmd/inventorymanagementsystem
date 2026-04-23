@@ -45,7 +45,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
-                .role(User.Role.STAFF)
+                .role(User.Role.OPERATIONS_STAFF)
                 .profilePictureUrl(profilePictureUrl)
                 .build();
         repository.save(user);

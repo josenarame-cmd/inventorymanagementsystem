@@ -67,3 +67,6 @@ target/
 ### React/Vite ###
 dist/
 build/
+boot.log
+test_compile_output.log
+final_debug.log

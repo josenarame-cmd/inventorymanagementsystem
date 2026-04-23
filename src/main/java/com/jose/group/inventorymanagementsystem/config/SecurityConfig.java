@@ -16,8 +16,11 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -31,7 +34,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/**", "/api/v1/public/**").permitAll()
-                        .requestMatchers("/api/v1/users/**", "/api/v1/audit/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/api/v1/users/**", "/api/v1/audit/**").hasAnyRole("SUPER_ADMIN", "ADMIN")
+                        .requestMatchers("/api/v1/products/**", "/api/v1/suppliers/**", "/api/v1/customers/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "MANAGER_SUPERVISOR")
+                        .requestMatchers("/api/v1/sales/**", "/api/v1/purchases/**").hasAnyRole("SUPER_ADMIN", "ADMIN", "OPERATIONS_STAFF", "MANAGER_SUPERVISOR", "FINANCE_ACCOUNTANT")
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )

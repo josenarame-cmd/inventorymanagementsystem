@@ -23,4 +23,10 @@ public class PurchaseController {
     public ResponseEntity<PurchaseOrder> createPurchaseOrder(@RequestBody PurchaseOrder order) {
         return ResponseEntity.ok(service.createPurchaseOrder(order));
     }
+
+    @PostMapping("/repair")
+    public ResponseEntity<String> repairZeroTotals() {
+        int count = service.repairZeroTotals();
+        return ResponseEntity.ok("Repaired " + count + " purchase order(s) with zero grand total.");
+    }
 }

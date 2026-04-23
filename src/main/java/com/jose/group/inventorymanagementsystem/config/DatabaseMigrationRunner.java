@@ -18,9 +18,22 @@ public class DatabaseMigrationRunner {
     public CommandLineRunner migrateEnum() {
         return args -> {
             try {
-                log.info("Executing database migration to update ENUM constraints...");
+                log.info("Executing database migration to update roles...");
                 jdbcTemplate.execute("ALTER TABLE users MODIFY COLUMN role VARCHAR(50) NOT NULL;");
-                log.info("Database migration completed successfully.");
+                
+                // Update legacy roles to new schema
+                jdbcTemplate.execute("UPDATE users SET role = 'OPERATIONS_STAFF' WHERE role = 'STAFF' OR role = 'OPERATIONS';");
+                jdbcTemplate.execute("UPDATE users SET role = 'FINANCE_ACCOUNTANT' WHERE role = 'FINANCE';");
+                jdbcTemplate.execute("UPDATE users SET role = 'MANAGER_SUPERVISOR' WHERE role = 'MANAGER';");
+                
+                // Ensure enabled column exists and is populated
+                try {
+                    jdbcTemplate.execute("ALTER TABLE users ADD COLUMN enabled BOOLEAN DEFAULT TRUE;");
+                } catch (Exception e) { /* Column might already exist */ }
+                jdbcTemplate.execute("UPDATE users SET enabled = TRUE WHERE enabled IS NULL;");
+                jdbcTemplate.execute("UPDATE users SET enabled = TRUE WHERE username = 'admin';");
+                
+                log.info("Database migration and role mapping completed successfully.");
             } catch (Exception e) {
                 log.error("Migration skipped or failed: {}", e.getMessage());
             }
