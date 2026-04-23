@@ -19,6 +19,6 @@ RUN ./gradlew build --no-daemon -x test -Dorg.gradle.jvmargs="-Xmx256m -XX:MaxMe
 
 # Final Package stage
 FROM eclipse-temurin:17-jre-focal
-COPY --from=backend-build /app/build/libs/inventorymanagementsystem-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=backend-build /app/build/libs/InventoryManagementSystem-0.0.1-SNAPSHOT.jar app.jar
 EXPOSE 8086
 ENTRYPOINT ["java", "-jar", "/app.jar"]
