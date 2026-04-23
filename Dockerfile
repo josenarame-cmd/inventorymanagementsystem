@@ -10,8 +10,10 @@ RUN npm run build
 FROM gradle:8.5-jdk17 AS backend-build
 WORKDIR /app
 COPY . .
-# Vite outputs directly to /app/src/main/resources/static because outDir is '../src/main/resources/static'
+# Copy the built frontend to Spring Boot's static resources
 COPY --from=frontend-build /app/src/main/resources/static/ /app/src/main/resources/static/
+# Fix permissions for gradlew
+RUN chmod +x gradlew
 RUN ./gradlew build --no-daemon -x test
 
 # Final Package stage
