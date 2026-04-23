@@ -12,7 +12,5 @@ services:
         sync: false
       - key: JWT_SECRET
         generateValue: true
-      - key: PORT
-        value: 8086
       - key: LOG_LEVEL_APP
         value: INFO
