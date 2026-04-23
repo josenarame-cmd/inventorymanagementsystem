@@ -14,7 +14,8 @@ COPY . .
 COPY --from=frontend-build /app/src/main/resources/static/ /app/src/main/resources/static/
 # Fix permissions for gradlew
 RUN chmod +x gradlew
-RUN ./gradlew build --no-daemon -x test
+# Run Gradle with very low memory settings for Render free tier
+RUN ./gradlew build --no-daemon -x test -Dorg.gradle.jvmargs="-Xmx256m -XX:MaxMetaspaceSize=128m"
 
 # Final Package stage
 FROM eclipse-temurin:17-jre-focal
