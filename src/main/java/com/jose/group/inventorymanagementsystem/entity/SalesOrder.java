@@ -46,6 +46,7 @@ public class SalesOrder {
 
     @OneToMany(mappedBy = "salesOrder", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
+    @Builder.Default
     private List<SalesItem> items = new ArrayList<>();
 
     // Null-safe getter guards against Lombok @Builder.Default + @NoArgsConstructor bug
