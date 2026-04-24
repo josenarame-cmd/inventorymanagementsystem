@@ -12,6 +12,8 @@ import com.jose.group.inventorymanagementsystem.entity.SalesOrder;
 import com.jose.group.inventorymanagementsystem.entity.SalesItem;
 import com.jose.group.inventorymanagementsystem.entity.PurchaseOrder;
 import com.jose.group.inventorymanagementsystem.entity.PurchaseItem;
+import com.jose.group.inventorymanagementsystem.entity.AuditLog;
+import com.jose.group.inventorymanagementsystem.repository.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -32,6 +34,7 @@ public class DataSeeder implements CommandLineRunner {
     private final SupplierRepository supplierRepository;
     private final SalesService salesService;
     private final PurchaseService purchaseService;
+    private final AuditLogRepository auditLogRepository;
 
     @Override
     public void run(String... args) throws Exception {
@@ -40,6 +43,7 @@ public class DataSeeder implements CommandLineRunner {
         seedCustomers();
         seedPurchases();
         seedSales();
+        fixMissingTimestamps();
     }
 
     private void seedSuppliers() {
@@ -125,6 +129,33 @@ public class DataSeeder implements CommandLineRunner {
         so.getItems().add(si);
         salesService.createSalesOrder(so);
         log.info("✅ Seeded initial sales.");
+    }
+
+    private void fixMissingTimestamps() {
+        List<Product> products = productRepository.findAll();
+        boolean changed = false;
+        for (Product p : products) {
+            if (p.getCreatedAt() == null || p.getUpdatedAt() == null) {
+                // Look for logs in AuditLog table to find "real" date
+                List<AuditLog> logs = auditLogRepository.findByEntityNameAndEntityIdOrderByTimestampAsc("Product", p.getId());
+                
+                if (!logs.isEmpty()) {
+                    // Real creation date is the first log timestamp
+                    if (p.getCreatedAt() == null) p.setCreatedAt(logs.get(0).getTimestamp());
+                    // Real last update is the latest log timestamp
+                    if (p.getUpdatedAt() == null) p.setUpdatedAt(logs.get(logs.size() - 1).getTimestamp());
+                } else {
+                    // Fallback to now if no logs found
+                    if (p.getCreatedAt() == null) p.setCreatedAt(java.time.LocalDateTime.now());
+                    if (p.getUpdatedAt() == null) p.setUpdatedAt(java.time.LocalDateTime.now());
+                }
+                changed = true;
+            }
+        }
+        if (changed) {
+            productRepository.saveAll(products);
+            log.info("✅ Recovered real timestamps from audit logs for existing products.");
+        }
     }
 
     // ── helpers ─────────────────────────────────────────────────────────────
