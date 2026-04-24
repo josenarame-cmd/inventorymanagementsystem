@@ -3,6 +3,7 @@ package com.jose.group.inventorymanagementsystem.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "products")
@@ -53,6 +54,22 @@ public class Product {
     private Integer reorderLevel = 10;
 
     private String unit; // e.g., kg, unit, box
+
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
     public Integer getRemainingQty() {
         int purchased = qtyPurchased != null ? qtyPurchased : 0;
