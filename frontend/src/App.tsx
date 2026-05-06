@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout';
+import ServerWakeUp from './components/ServerWakeUp';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -20,6 +21,7 @@ import { CurrencyProvider } from './context/CurrencyContext';
 
 function App() {
     return (
+        <ServerWakeUp>
         <CurrencyProvider>
             <AuthProvider>
                 <BrowserRouter>
@@ -48,6 +50,7 @@ function App() {
             </BrowserRouter>
         </AuthProvider>
     </CurrencyProvider>
+    </ServerWakeUp>
     );
 }
 
