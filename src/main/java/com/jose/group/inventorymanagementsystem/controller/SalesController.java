@@ -24,6 +24,17 @@ public class SalesController {
         return ResponseEntity.ok(service.createSalesOrder(order));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<SalesOrder> updateSalesOrder(@PathVariable Long id, @RequestBody SalesOrder order) {
+        return ResponseEntity.ok(service.updateSalesOrder(id, order));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSalesOrder(@PathVariable Long id) {
+        service.deleteSalesOrder(id);
+        return ResponseEntity.noContent().build();
+    }
+
     /** Admin endpoint to recalculate grandTotal for orders that were saved as 0 */
     @PostMapping("/repair")
     public ResponseEntity<String> repairZeroTotals() {

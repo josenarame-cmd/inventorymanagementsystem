@@ -24,6 +24,17 @@ public class PurchaseController {
         return ResponseEntity.ok(service.createPurchaseOrder(order));
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<PurchaseOrder> updatePurchaseOrder(@PathVariable Long id, @RequestBody PurchaseOrder order) {
+        return ResponseEntity.ok(service.updatePurchaseOrder(id, order));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePurchaseOrder(@PathVariable Long id) {
+        service.deletePurchaseOrder(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/repair")
     public ResponseEntity<String> repairZeroTotals() {
         int count = service.repairZeroTotals();

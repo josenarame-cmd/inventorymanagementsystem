@@ -13,9 +13,10 @@ interface DataTableProps {
     columns: Column[];
     onRowClick?: (item: any) => void;
     actions?: React.ReactNode;
+    rowActions?: (item: any) => React.ReactNode;
 }
 
-const DataTable: React.FC<DataTableProps> = ({ title, data = [], columns, onRowClick, actions }) => {
+const DataTable: React.FC<DataTableProps> = ({ title, data = [], columns, onRowClick, actions, rowActions }) => {
     const defaultData = Array.isArray(data) ? data : [];
     const [currentPage, setCurrentPage] = React.useState(1);
     const itemsPerPage = 10;
@@ -80,7 +81,9 @@ const DataTable: React.FC<DataTableProps> = ({ title, data = [], columns, onRowC
                                     </td>
                                 ))}
                                 <td className="px-8 py-4 text-right">
-                                    <ChevronRight className="inline text-gray-300 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" size={20} />
+                                    {rowActions ? rowActions(item) : (
+                                        <ChevronRight className="inline text-gray-300 group-hover:text-blue-500 transform group-hover:translate-x-1 transition-all" size={20} />
+                                    )}
                                 </td>
                             </tr>
                         ))}

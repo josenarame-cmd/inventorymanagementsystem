@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import DataTable from '../components/DataTable';
 import api from '../services/api';
-import { Plus, Package, ArrowDown, Info, Activity, History, TrendingUp, TrendingDown, Clock } from 'lucide-react';
+import { Plus, Package, ArrowDown, Info, Activity, History, TrendingUp, TrendingDown, Clock, Edit2, Trash2 } from 'lucide-react';
 import { useCurrency } from '../context/CurrencyContext';
 import { format as formatDate } from 'date-fns';
 
@@ -21,6 +21,7 @@ const Inventory = () => {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
     const { currency, format } = useCurrency();
     const [formData, setFormData] = useState({ ...EMPTY_FORM });
     const [submitting, setSubmitting] = useState(false);
@@ -48,6 +49,22 @@ const Inventory = () => {
 
     useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
+    const handleEdit = (item: any) => {
+        setEditingId(item.id);
+        setFormData({ ...item });
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        try {
+            await api.delete(`/products/${id}`);
+            fetchProducts();
+        } catch (err) {
+            alert('Failed to delete product.');
+        }
+    };
+
     const handleAddProduct = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
@@ -62,12 +79,17 @@ const Inventory = () => {
                 qtyUsed: Number(formData.qtyUsed) || 0,
                 reorderLevel: Number(formData.reorderLevel) || 10,
             };
-            await api.post('/products', payload);
+            if (editingId) {
+                await api.put(`/products/${editingId}`, payload);
+            } else {
+                await api.post('/products', payload);
+            }
             setIsModalOpen(false);
+            setEditingId(null);
             setFormData({ ...EMPTY_FORM });
             fetchProducts();
         } catch (err) {
-            alert('Failed to add product. Check that the SKU is unique.');
+            alert('Failed to save product. Check that the SKU is unique.');
         } finally {
             setSubmitting(false);
         }
@@ -155,9 +177,19 @@ const Inventory = () => {
                         title="Inventory Products"
                         data={products}
                         columns={columns}
+                        rowActions={(item) => (
+                            <div className="flex items-center justify-end gap-2">
+                                <button onClick={(e) => { e.stopPropagation(); handleEdit(item); }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+                                    <Edit2 size={16} />
+                                </button>
+                                <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                                    <Trash2 size={16} />
+                                </button>
+                            </div>
+                        )}
                         actions={
                             <button
-                                onClick={() => setIsModalOpen(true)}
+                                onClick={() => { setEditingId(null); setFormData({...EMPTY_FORM}); setIsModalOpen(true); }}
                                 className="flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/20 hover:bg-blue-500 transition-all"
                             >
                                 <Plus size={18} /> Add New Item
@@ -253,7 +285,7 @@ const Inventory = () => {
                                 <Package className="text-blue-600" size={24} />
                             </div>
                             <div>
-                                <h3 className="text-2xl font-black text-gray-900">New Inventory Item</h3>
+                                <h3 className="text-2xl font-black text-gray-900">{editingId ? 'Edit Inventory Item' : 'New Inventory Item'}</h3>
                                 <p className="text-xs text-gray-400 mt-0.5">Fields marked * are required</p>
                             </div>
                         </div>
@@ -386,13 +418,13 @@ const Inventory = () => {
                             </div>
 
                             <div className="flex gap-4 pt-2">
-                                <button type="button" onClick={() => { setIsModalOpen(false); setFormData({ ...EMPTY_FORM }); }}
+                                <button type="button" onClick={() => { setIsModalOpen(false); setEditingId(null); setFormData({ ...EMPTY_FORM }); }}
                                     className="flex-1 px-4 py-4 bg-white border border-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 transition-colors">
                                     Discard
                                 </button>
                                 <button type="submit" disabled={submitting}
                                     className="flex-1 px-4 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-500 shadow-xl shadow-blue-500/30 transition-all active:scale-[0.98] disabled:opacity-50">
-                                    {submitting ? 'Saving...' : 'Add to Inventory'}
+                                    {submitting ? 'Saving...' : (editingId ? 'Save Changes' : 'Add to Inventory')}
                                 </button>
                             </div>
                         </form>

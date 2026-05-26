@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import DataTable from '../components/DataTable';
 import api from '../services/api';
-import { Plus, UserCheck } from 'lucide-react';
+import { Plus, UserCheck, Edit2, Trash2 } from 'lucide-react';
 
 import { useCurrency } from '../context/CurrencyContext';
 import LocationSelector from '../components/LocationSelector';
@@ -12,6 +12,7 @@ const Customers = () => {
     const [formData, setFormData] = useState({ name: '', email: '', phone: '', address: '' });
     const [countryCode, setCountryCode] = useState('+250');
     const [submitting, setSubmitting] = useState(false);
+    const [editingId, setEditingId] = useState<number | null>(null);
     const { format } = useCurrency();
 
     const fetchCustomers = () => {
@@ -22,17 +23,45 @@ const Customers = () => {
         fetchCustomers();
     }, []);
 
+    const handleEdit = (item: any) => {
+        setEditingId(item.id);
+        const [code, ...rest] = (item.phone || '').split(' ');
+        setCountryCode(code || '+250');
+        setFormData({
+            name: item.name || '',
+            email: item.email || '',
+            phone: rest.join(' ') || item.phone || '',
+            address: item.address || ''
+        });
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Are you sure you want to delete this customer?')) return;
+        try {
+            await api.delete(`/customers/${id}`);
+            fetchCustomers();
+        } catch (err) {
+            alert('Failed to delete customer.');
+        }
+    };
+
     const handleAddCustomer = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitting(true);
         try {
             const finalData = { ...formData, phone: `${countryCode} ${formData.phone}` };
-            await api.post('/customers', finalData);
+            if (editingId) {
+                await api.put(`/customers/${editingId}`, finalData);
+            } else {
+                await api.post('/customers', finalData);
+            }
             setIsModalOpen(false);
+            setEditingId(null);
             setFormData({ name: '', email: '', phone: '', address: '' });
             fetchCustomers();
         } catch (err) {
-            alert('Failed to add customer');
+            alert('Failed to save customer');
         } finally {
             setSubmitting(false);
         }
@@ -56,9 +85,19 @@ const Customers = () => {
                 title="Customer Relationship Management" 
                 data={customers} 
                 columns={columns}
+                rowActions={(item) => (
+                    <div className="flex items-center justify-end gap-2">
+                        <button onClick={(e) => { e.stopPropagation(); handleEdit(item); }} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all">
+                            <Edit2 size={16} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }} className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                )}
                 actions={
                     <button 
-                        onClick={() => setIsModalOpen(true)}
+                        onClick={() => { setEditingId(null); setFormData({ name: '', email: '', phone: '', address: '' }); setIsModalOpen(true); }}
                         className="flex items-center gap-2 bg-blue-600 text-white px-5 py-3 rounded-2xl font-bold text-sm shadow-lg shadow-blue-500/20 hover:bg-blue-500 transition-all"
                     >
                         <Plus size={18} /> Add Customer
@@ -73,7 +112,7 @@ const Customers = () => {
                             <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
                                 <Plus className="text-blue-600" size={24} />
                             </div>
-                            <h3 className="text-2xl font-black text-gray-900 font-sans">Register New Customer</h3>
+                            <h3 className="text-2xl font-black text-gray-900 font-sans">{editingId ? 'Edit Customer' : 'Register New Customer'}</h3>
                         </div>
                         
                         <form onSubmit={handleAddCustomer} className="space-y-6">
@@ -112,9 +151,9 @@ const Customers = () => {
                             </div>
 
                             <div className="flex gap-4 pt-6">
-                                <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-4 bg-white border border-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 transition-colors">Discard</button>
+                                <button type="button" onClick={() => { setIsModalOpen(false); setEditingId(null); setFormData({ name: '', email: '', phone: '', address: '' }); }} className="flex-1 px-4 py-4 bg-white border border-gray-200 text-gray-700 rounded-2xl font-bold hover:bg-gray-50 transition-colors">Discard</button>
                                 <button type="submit" disabled={submitting} className="flex-1 px-4 py-4 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-500 shadow-xl shadow-blue-500/30 transition-all active:scale-[0.98] disabled:opacity-50">
-                                    {submitting ? 'Processing...' : 'Save Customer Profile'}
+                                    {submitting ? 'Processing...' : (editingId ? 'Save Changes' : 'Save Customer Profile')}
                                 </button>
                             </div>
                         </form>

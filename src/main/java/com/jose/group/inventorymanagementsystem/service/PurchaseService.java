@@ -78,6 +78,85 @@ public class PurchaseService {
         return purchaseOrderRepository.findAll();
     }
 
+    @Transactional
+    public void deletePurchaseOrder(Long id) {
+        PurchaseOrder order = purchaseOrderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Purchase order not found"));
+        
+        for (PurchaseItem item : order.getItems()) {
+            Product product = item.getProduct();
+            product.setQtyPurchased(product.getQtyPurchased() - item.getQuantity());
+            productRepository.save(product);
+        }
+
+        Supplier supplier = order.getSupplier();
+        supplier.setTotalPurchases(supplier.getTotalPurchases().subtract(order.getGrandTotal()));
+        supplier.setBalance(supplier.getBalance().subtract(order.getGrandTotal()));
+        supplierRepository.save(supplier);
+
+        purchaseOrderRepository.delete(order);
+        auditLogService.log("DELETE", "PurchaseOrder", id, "Deleted purchase order: " + order.getOrderNumber());
+    }
+
+    @Transactional
+    public PurchaseOrder updatePurchaseOrder(Long id, PurchaseOrder updatedOrder) {
+        PurchaseOrder existing = purchaseOrderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Purchase order not found"));
+        
+        // 1. Revert existing order impacts
+        for (PurchaseItem item : existing.getItems()) {
+            Product product = item.getProduct();
+            product.setQtyPurchased(product.getQtyPurchased() - item.getQuantity());
+            productRepository.save(product);
+        }
+        Supplier oldSupplier = existing.getSupplier();
+        oldSupplier.setTotalPurchases(oldSupplier.getTotalPurchases().subtract(existing.getGrandTotal()));
+        oldSupplier.setBalance(oldSupplier.getBalance().subtract(existing.getGrandTotal()));
+        supplierRepository.save(oldSupplier);
+
+        // 2. Clear old items
+        existing.getItems().clear();
+
+        // 3. Apply new order details
+        if (updatedOrder.getItems() == null || updatedOrder.getItems().isEmpty()) {
+            throw new RuntimeException("Purchase order must contain at least one item.");
+        }
+        Supplier newSupplier = supplierRepository.findById(updatedOrder.getSupplier().getId())
+                .orElseThrow(() -> new RuntimeException("Supplier not found"));
+        existing.setSupplier(newSupplier);
+
+        BigDecimal total = BigDecimal.ZERO;
+        for (PurchaseItem item : updatedOrder.getItems()) {
+            Product product = productRepository.findById(item.getProduct().getId())
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + item.getProduct().getId()));
+            
+            item.setProduct(product);
+            if (item.getUnitPrice() == null) {
+                item.setUnitPrice(product.getPurchasePrice());
+            }
+            item.setTotalPrice(item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
+            total = total.add(item.getTotalPrice());
+
+            product.setQtyPurchased(product.getQtyPurchased() + item.getQuantity());
+            productRepository.save(product);
+
+            item.setPurchaseOrder(existing);
+            existing.getItems().add(item);
+        }
+
+        existing.setTotalAmount(total);
+        existing.setTaxAmount(total.multiply(new BigDecimal("0.1")));
+        existing.setGrandTotal(existing.getTotalAmount().add(existing.getTaxAmount()));
+
+        newSupplier.setTotalPurchases(newSupplier.getTotalPurchases().add(existing.getGrandTotal()));
+        newSupplier.setBalance(newSupplier.getBalance().add(existing.getGrandTotal()));
+        supplierRepository.save(newSupplier);
+
+        PurchaseOrder saved = purchaseOrderRepository.save(existing);
+        auditLogService.log("UPDATE", "PurchaseOrder", saved.getId(), "Updated purchase order: " + saved.getOrderNumber());
+        return saved;
+    }
+
     /**
      * Repairs existing purchase orders where grandTotal = 0 but items exist.
      */
