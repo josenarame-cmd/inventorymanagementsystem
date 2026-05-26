@@ -4,5 +4,15 @@ services:
     runtime: docker
     plan: free
     envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USERNAME
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        sync: false
       - key: LOG_LEVEL_APP
         value: INFO
